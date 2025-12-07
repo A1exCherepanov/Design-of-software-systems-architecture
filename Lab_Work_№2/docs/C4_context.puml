@@ -1,0 +1,22 @@
+@startuml
+!define C4P https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master
+!includeurl C4P/C4_Context.puml
+
+Person(Analyst, "Аналитик данных")
+Person(MLE, "ML-инженер")
+Person(Architect, "Архитектор данных")
+Person(Business, "Бизнес-заказчик")
+Person(EndUser, "Конечный пользователь")
+
+System_Ext(Sensors, "Внешние сенсоры")
+
+System(SystemApp, "Система обработки и предиктинга данных", "Обрабатывает данные, обучает модели, предоставляет визуализацию и прогнозы")
+
+' --- Relationships (PlantUML стандарт) ---
+Analyst ..> SystemApp : "Загружает данные, проводит аналитику, строит визуализации"
+MLE ..> SystemApp : "Запускает обучение моделей, получает предсказания и метрики"
+Architect ..> SystemApp : "Проектирует структуры хранения, мониторит ETL"
+Business ..> SystemApp : "Получает отчеты, KPI и прогнозы"
+EndUser ..> SystemApp : "Просматривает дашборд и предупреждения о рисках"
+Sensors ..> SystemApp : "Передача данных о состоянии оборудования"
+@enduml
