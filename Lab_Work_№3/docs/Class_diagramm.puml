@@ -1,0 +1,78 @@
+@startuml
+skinparam classAttributeIconSize 0
+skinparam linetype ortho
+
+class Asset {
+  +asset_id : Long
+  install_date : Date
+  status : String
+}
+
+class AssetType {
+  +asset_type_id : Int
+  name : String
+  description : String
+}
+
+class Manufacturer {
+  +manufacturer_id : Int
+  name : String
+  country : String
+}
+
+class Location {
+  +location_id : Int
+  city : String
+  district : String
+  address : String
+}
+
+class Sensor {
+  +sensor_id : Long
+  sensor_type : String
+  unit : String
+}
+
+class SensorEvent {
+  +event_id : Long
+  timestamp : Timestamp
+  value : Double
+  quality_flag : String
+}
+
+class MaintenanceLog {
+  +maintenance_id : Long
+  maintenance_date : Date
+  maintenance_type : String
+  result : String
+  cost : Decimal
+}
+
+class FailureEvent {
+  +failure_id : Long
+  failure_date : Date
+  failure_type : String
+  severity : Int
+  description : String
+}
+
+class ServiceCrew {
+  +crew_id : Int
+  name : String
+  specialization : String
+}
+
+
+Asset "1" --> "1" AssetType : has
+Asset "1" --> "1" Manufacturer : produced by
+Asset "1" --> "1" Location : installed at
+
+Asset "1" --> "0..*" Sensor : equipped with
+Sensor "1" --> "0..*" SensorEvent : generates
+
+Asset "1" --> "0..*" MaintenanceLog : serviced by
+MaintenanceLog "1" --> "1" ServiceCrew : executed by
+
+Asset "1" --> "0..*" FailureEvent : may cause
+
+@enduml
