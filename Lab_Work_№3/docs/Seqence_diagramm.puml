@@ -1,0 +1,59 @@
+@startuml
+title Диаграмма последовательности ML-пайплайна
+
+actor "Аналитик данных" as Analyst
+actor "ML-инженер" as MLE
+
+participant "Загрузка данных\nиз Хранилища данных" as Loader
+participant "Очистка и нормализация\nданных" as Preprocess
+participant "Формирование\nпризнаков" as FeatureEng
+participant "Обучение\nмоделей" as Training
+participant "Хранение версий\nмоделей" as Versioning
+participant "Формирование\nрезультатов и метрик" as Results
+participant "Git" as Git
+
+== Подготовка данных ==
+
+Analyst -> Loader : Запуск загрузки данных
+activate Loader
+Loader -> Preprocess : Передача загруженных данных
+activate Preprocess
+Preprocess -> FeatureEng : Очищенные и нормализованные данные
+activate FeatureEng
+deactivate Loader
+deactivate Preprocess
+
+== Формирование обучающей выборки ==
+
+MLE -> FeatureEng : Взаимодействие с этапом формирования выборки
+
+Training -> FeatureEng : Запрос гиперпараметров для модели
+activate Training
+FeatureEng --> Training : Формирование обучающей выборки
+deactivate FeatureEng
+
+== Обучение и версионирование ==
+
+MLE -> Training : Запуск обучения модели
+Training -> Training : Подбор гиперпараметров
+Training -> Versioning : Запрос на создание версии
+activate Versioning
+Versioning --> Training : Создание ветки с версией модели
+Training -> Versioning : Сохранение версии модели
+Versioning -> Git : Commit / push модели
+activate Git
+Git --> Versioning : Успешное сохранение модели
+deactivate Git
+deactivate Versioning
+
+== Получение результатов ==
+
+Training -> Results : Отправка результатов регрессии
+activate Results
+Training -> Results : Отправка метрик качества
+Results --> MLE : Отображение метрик качества
+Results --> Analyst : Результаты прогнозирования
+deactivate Results
+deactivate Training
+
+@enduml
