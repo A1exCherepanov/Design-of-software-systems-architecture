@@ -109,7 +109,7 @@ describe("POST /sign-in", () => {
 
     expect(res.statusCode).toBe(400);
     expect(res.body.status).toBe(false);
-    expect(res.body.message).toMatch(/пароль/i);
+    expect(res.body.message).toMatch(/пароли/i);
   });
 
   it("отказывает при несуществующем пользователе", async () => {
