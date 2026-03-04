@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="styles/reset.css" />
+    <link rel="stylesheet" href="styles/global.css" />
+    <link rel="stylesheet" href="styles/index.css" />
+    <title>Главная</title>
+  </head>
+  <body>
+    <div class="container">
+      <div class="btns">
+        <div class="btn btn-active" id="cases">Корпуса</div>
+        <div class="btn" id="graphics-cards">Видеокарты</div>
+        <div class="btn" id="memory">Оперативная память</div>
+        <div class="btn" id="motherboards">Материнские платы</div>
+        <div class="btn" id="power-supplies">Блоки питания</div>
+        <div class="btn" id="processors">Процессоры</div>
+        <div class="btn" id="storage">Накопители</div>
+      </div>
+
+      <div class="products" id="products"></div>
+    </div>
+
+    <div class="btn_logout">
+      <div class="btn_logout_btn" onclick="logout()">Выйти</div>
+    </div>
+
+    <div class="btn_area">
+      <button class="products_btn" id="addToCartButton">
+        Добавить в корзину
+      </button>
+
+      <a href="cart.html" class="products_btn" id="showCartButton">
+        <img src="images/cart.svg" alt="Корзина" width="28" height="28" />
+      </a>
+    </div>
+
+    <!-- config.js ДОЛЖЕН быть первым! -->
+    <script src="scripts/config.js"></script>
+    <script src="scripts/redirect.js"></script>
+    <script src="scripts/logOut.js"></script>
+    <script src="scripts/getActiveId.js"></script>
+    <script src="scripts/productItem.js"></script>
+    <script src="scripts/fetchData.js"></script>
+    <script src="scripts/cart.js"></script>
+  </body>
+</html>

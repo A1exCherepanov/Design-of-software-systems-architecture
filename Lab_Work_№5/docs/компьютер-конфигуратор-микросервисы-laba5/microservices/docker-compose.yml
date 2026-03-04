@@ -1,0 +1,93 @@
+services:
+  # ── База данных ──────────────────────────────────────────────────────────
+  postgres:
+    image: postgres:16-alpine
+    container_name: configurator-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: electronics_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./database.sql:/docker-entrypoint-initdb.d/init.sql
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d electronics_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # ── Auth Service ─────────────────────────────────────────────────────────
+  auth-service:
+    build:
+      context: ./auth-service
+      dockerfile: Dockerfile
+    container_name: configurator-auth
+    restart: unless-stopped
+    environment:
+      PORT: 3001
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: electronics_db
+      DB_USER: postgres
+      DB_PASSWORD: ${DB_PASSWORD:-postgres}
+      JWT_SECRET: ${JWT_SECRET:-supersecretkey}
+    ports:
+      - "3001:3001"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  # ── Products Service ──────────────────────────────────────────────────────
+  products-service:
+    build:
+      context: ./products-service
+      dockerfile: Dockerfile
+    container_name: configurator-products
+    restart: unless-stopped
+    environment:
+      PORT: 3002
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: electronics_db
+      DB_USER: postgres
+      DB_PASSWORD: ${DB_PASSWORD:-postgres}
+    ports:
+      - "3002:3002"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  # ── API Gateway ───────────────────────────────────────────────────────────
+  api-gateway:
+    build:
+      context: ./api-gateway
+      dockerfile: Dockerfile
+    container_name: configurator-gateway
+    restart: unless-stopped
+    environment:
+      PORT: 3000
+      AUTH_SERVICE_URL: http://auth-service:3001
+      PRODUCTS_SERVICE_URL: http://products-service:3002
+    ports:
+      - "3000:3000"
+    depends_on:
+      - auth-service
+      - products-service
+
+  # ── Client (Nginx) ────────────────────────────────────────────────────────
+  client:
+    build:
+      context: ./client
+      dockerfile: Dockerfile
+    container_name: configurator-client
+    restart: unless-stopped
+    ports:
+      - "8080:80"
+    depends_on:
+      - api-gateway
+
+volumes:
+  postgres_data:

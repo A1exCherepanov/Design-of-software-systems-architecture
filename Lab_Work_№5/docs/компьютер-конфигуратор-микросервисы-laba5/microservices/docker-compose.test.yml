@@ -1,0 +1,65 @@
+services:
+  postgres-test:
+    image: postgres:16-alpine
+    container_name: configurator-db-test
+    environment:
+      POSTGRES_DB: electronics_test
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: testpassword
+    ports:
+      - "5433:5432"
+    tmpfs:
+      - /var/lib/postgresql/data   # данные только в RAM — быстрее
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d electronics_test"]
+      interval: 3s
+      timeout: 3s
+      retries: 15
+
+  auth-service-test:
+    build:
+      context: ./auth-service
+      dockerfile: Dockerfile
+    container_name: configurator-auth-test
+    environment:
+      PORT: 3001
+      DB_HOST: postgres-test
+      DB_PORT: 5432
+      DB_NAME: electronics_test
+      DB_USER: postgres
+      DB_PASSWORD: testpassword
+      JWT_SECRET: test-secret
+    depends_on:
+      postgres-test:
+        condition: service_healthy
+
+  products-service-test:
+    build:
+      context: ./products-service
+      dockerfile: Dockerfile
+    container_name: configurator-products-test
+    environment:
+      PORT: 3002
+      DB_HOST: postgres-test
+      DB_PORT: 5432
+      DB_NAME: electronics_test
+      DB_USER: postgres
+      DB_PASSWORD: testpassword
+    depends_on:
+      postgres-test:
+        condition: service_healthy
+
+  api-gateway-test:
+    build:
+      context: ./api-gateway
+      dockerfile: Dockerfile
+    container_name: configurator-gateway-test
+    environment:
+      PORT: 3000
+      AUTH_SERVICE_URL: http://auth-service-test:3001
+      PRODUCTS_SERVICE_URL: http://products-service-test:3002
+    ports:
+      - "3000:3000"
+    depends_on:
+      - auth-service-test
+      - products-service-test

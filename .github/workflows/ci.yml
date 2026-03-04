@@ -1,0 +1,209 @@
+name: CI — Сборка и тестирование
+
+on:
+  push:
+    branches: [main, master, develop]
+  pull_request:
+    branches: [main, master]
+
+# Путь к микросервисам внутри репозитория
+env:
+  SERVICES_PATH: Lab_Work_№5/docs/компьютер-конфигуратор-микросервисы-laba5/microservices
+
+jobs:
+  # ══════════════════════════════════════════════════════════════════
+  # JOB 1: Интеграционные тесты auth-service и products-service
+  # ══════════════════════════════════════════════════════════════════
+  integration-tests:
+    name: Интеграционные тесты
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: electronics_test
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: testpassword
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d electronics_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+
+      # ── auth-service ──────────────────────────────────────────────
+      - name: 🟡 Установка зависимостей auth-service
+        working-directory: ${{ env.SERVICES_PATH }}/auth-service
+        run: npm install
+
+      - name: 🧪 Тесты auth-service
+        working-directory: ${{ env.SERVICES_PATH }}/auth-service
+        env:
+          DB_HOST: localhost
+          DB_PORT: 5432
+          DB_NAME: electronics_test
+          DB_USER: postgres
+          DB_PASSWORD: testpassword
+          JWT_SECRET: test-ci-secret
+          PORT: 3001
+        run: npm test
+
+      # ── products-service ──────────────────────────────────────────
+      - name: 🟢 Установка зависимостей products-service
+        working-directory: ${{ env.SERVICES_PATH }}/products-service
+        run: npm install
+
+      - name: 🧪 Тесты products-service
+        working-directory: ${{ env.SERVICES_PATH }}/products-service
+        env:
+          DB_HOST: localhost
+          DB_PORT: 5432
+          DB_NAME: electronics_test
+          DB_USER: postgres
+          DB_PASSWORD: testpassword
+          PORT: 3002
+        run: npm test
+
+  # ══════════════════════════════════════════════════════════════════
+  # JOB 2: Интеграционные тесты api-gateway (через реальные сервисы)
+  # ══════════════════════════════════════════════════════════════════
+  gateway-tests:
+    name: Тесты API Gateway (end-to-end routing)
+    runs-on: ubuntu-latest
+    needs: integration-tests
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: electronics_test
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: testpassword
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d electronics_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+
+      - name: 📦 Установка зависимостей всех сервисов
+        working-directory: ${{ env.SERVICES_PATH }}
+        run: |
+          npm install --prefix auth-service
+          npm install --prefix products-service
+          npm install --prefix api-gateway
+
+      - name: 🗄️ Инициализация схемы БД
+        working-directory: ${{ env.SERVICES_PATH }}
+        env:
+          PGPASSWORD: testpassword
+        run: psql -h localhost -U postgres -d electronics_test -f database.sql
+
+      - name: 🚀 Запуск auth-service в фоне
+        working-directory: ${{ env.SERVICES_PATH }}
+        env:
+          PORT: 3001
+          DB_HOST: localhost
+          DB_PORT: 5432
+          DB_NAME: electronics_test
+          DB_USER: postgres
+          DB_PASSWORD: testpassword
+          JWT_SECRET: test-ci-secret
+        run: node auth-service/index.js &
+
+      - name: 🚀 Запуск products-service в фоне
+        working-directory: ${{ env.SERVICES_PATH }}
+        env:
+          PORT: 3002
+          DB_HOST: localhost
+          DB_PORT: 5432
+          DB_NAME: electronics_test
+          DB_USER: postgres
+          DB_PASSWORD: testpassword
+        run: node products-service/index.js &
+
+      - name: 🚀 Запуск api-gateway в фоне
+        working-directory: ${{ env.SERVICES_PATH }}
+        env:
+          PORT: 3000
+          AUTH_SERVICE_URL: http://localhost:3001
+          PRODUCTS_SERVICE_URL: http://localhost:3002
+        run: node api-gateway/index.js &
+
+      - name: ⏳ Ожидание готовности сервисов
+        run: |
+          echo "Ждём auth-service..."
+          timeout 30 bash -c 'until curl -sf http://localhost:3001/health; do sleep 1; done'
+          echo "Ждём products-service..."
+          timeout 30 bash -c 'until curl -sf http://localhost:3002/health; do sleep 1; done'
+          echo "Ждём api-gateway..."
+          timeout 30 bash -c 'until curl -sf http://localhost:3000/health; do sleep 1; done'
+          echo "✅ Все сервисы готовы"
+
+      - name: 🧪 Тесты api-gateway
+        working-directory: ${{ env.SERVICES_PATH }}/api-gateway
+        env:
+          GATEWAY_URL: http://localhost:3000
+        run: npm test
+
+  # ══════════════════════════════════════════════════════════════════
+  # JOB 3: Сборка Docker-образов (проверка что Dockerfile валидны)
+  # ══════════════════════════════════════════════════════════════════
+  docker-build:
+    name: Сборка Docker-образов
+    runs-on: ubuntu-latest
+    needs: integration-tests
+
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+
+      - name: 🐳 Настройка Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: 🏗️ Сборка auth-service
+        uses: docker/build-push-action@v5
+        with:
+          context: ${{ env.SERVICES_PATH }}/auth-service
+          push: false
+          tags: configurator/auth-service:ci
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: 🏗️ Сборка products-service
+        uses: docker/build-push-action@v5
+        with:
+          context: ${{ env.SERVICES_PATH }}/products-service
+          push: false
+          tags: configurator/products-service:ci
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: 🏗️ Сборка api-gateway
+        uses: docker/build-push-action@v5
+        with:
+          context: ${{ env.SERVICES_PATH }}/api-gateway
+          push: false
+          tags: configurator/api-gateway:ci
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: 🏗️ Сборка client
+        uses: docker/build-push-action@v5
+        with:
+          context: ${{ env.SERVICES_PATH }}/client
+          push: false
+          tags: configurator/client:ci
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
