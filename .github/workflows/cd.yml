@@ -1,0 +1,85 @@
+name: CD — Публикация образов на Docker Hub
+
+on:
+  push:
+    branches: [main, master]
+
+env:
+  IMAGE_PREFIX: ${{ secrets.DOCKER_USERNAME }}/configurator
+  SERVICES_PATH: Lab_Work_№5/docs/компьютер-конфигуратор-микросервисы-laba5/microservices
+
+jobs:
+  deploy:
+    name: Сборка и публикация на Docker Hub
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+
+      - name: 🐳 Настройка Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: 🔐 Авторизация на Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: 🏷️ Генерация тегов
+        id: tags
+        run: |
+          SHA=$(git rev-parse --short HEAD)
+          echo "sha=${SHA}" >> $GITHUB_OUTPUT
+
+      - name: 🚀 Публикация auth-service
+        uses: docker/build-push-action@v5
+        with:
+          context: ${{ env.SERVICES_PATH }}/auth-service
+          push: true
+          tags: |
+            ${{ env.IMAGE_PREFIX }}-auth-service:latest
+            ${{ env.IMAGE_PREFIX }}-auth-service:${{ steps.tags.outputs.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: 🚀 Публикация products-service
+        uses: docker/build-push-action@v5
+        with:
+          context: ${{ env.SERVICES_PATH }}/products-service
+          push: true
+          tags: |
+            ${{ env.IMAGE_PREFIX }}-products-service:latest
+            ${{ env.IMAGE_PREFIX }}-products-service:${{ steps.tags.outputs.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: 🚀 Публикация api-gateway
+        uses: docker/build-push-action@v5
+        with:
+          context: ${{ env.SERVICES_PATH }}/api-gateway
+          push: true
+          tags: |
+            ${{ env.IMAGE_PREFIX }}-api-gateway:latest
+            ${{ env.IMAGE_PREFIX }}-api-gateway:${{ steps.tags.outputs.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: 🚀 Публикация client
+        uses: docker/build-push-action@v5
+        with:
+          context: ${{ env.SERVICES_PATH }}/client
+          push: true
+          tags: |
+            ${{ env.IMAGE_PREFIX }}-client:latest
+            ${{ env.IMAGE_PREFIX }}-client:${{ steps.tags.outputs.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: 📋 Итог публикации
+        run: |
+          echo "✅ Все образы опубликованы на Docker Hub:"
+          echo "   docker pull ${{ env.IMAGE_PREFIX }}-auth-service:latest"
+          echo "   docker pull ${{ env.IMAGE_PREFIX }}-products-service:latest"
+          echo "   docker pull ${{ env.IMAGE_PREFIX }}-api-gateway:latest"
+          echo "   docker pull ${{ env.IMAGE_PREFIX }}-client:latest"

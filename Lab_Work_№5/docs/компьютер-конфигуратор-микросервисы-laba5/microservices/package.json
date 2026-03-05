@@ -1,0 +1,20 @@
+{
+  "name": "computer-configurator-microservices",
+  "version": "1.0.0",
+  "description": "Конфигуратор компьютерной сборки — микросервисная архитектура",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "install:all": "npm install --prefix api-gateway && npm install --prefix auth-service && npm install --prefix products-service",
+    "start": "concurrently --names \"GATEWAY,AUTH,PRODUCTS\" --prefix-colors \"cyan,yellow,green\" \"npm start --prefix api-gateway\" \"npm start --prefix auth-service\" \"npm start --prefix products-service\"",
+    "dev": "concurrently --names \"GATEWAY,AUTH,PRODUCTS\" --prefix-colors \"cyan,yellow,green\" \"npm run dev --prefix api-gateway\" \"npm run dev --prefix auth-service\" \"npm run dev --prefix products-service\"",
+    "test:auth": "npm test --prefix auth-service",
+    "test:products": "npm test --prefix products-service",
+    "test:gateway": "npm test --prefix api-gateway",
+    "docker:up": "docker compose up --build",
+    "docker:down": "docker compose down -v"
+  },
+  "dependencies": {
+    "concurrently": "^8.2.2"
+  }
+}
