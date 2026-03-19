@@ -1,0 +1,33 @@
+@startuml Observer
+skinparam linetype ortho
+skinparam classAttributeIconSize 0
+hide circle
+interface IObserver {
+  + update(event: string, data: object) : void
+}
+
+class PriceChangeNotifier {
+  - observers : IObserver[]
+  + subscribe(observer: IObserver) : void
+  + unsubscribe(observer: IObserver) : void
+  + notify(event: string, data: object) : void
+  + changePrice(productId: number, newPrice: number) : void
+}
+
+class CacheInvalidator {
+  + update(event: string, data: object) : void
+}
+
+class UserNotifier {
+  + update(event: string, data: object) : void
+}
+
+class AuditLogger {
+  + update(event: string, data: object) : void
+}
+
+IObserver <|.. CacheInvalidator
+IObserver <|.. UserNotifier
+IObserver <|.. AuditLogger
+PriceChangeNotifier --> IObserver : уведомляет
+@enduml

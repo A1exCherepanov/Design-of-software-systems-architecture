@@ -1,0 +1,16 @@
+@startuml Singleton
+skinparam linetype ortho
+skinparam classAttributeIconSize 0
+hide circle
+class DatabasePool {
+  - _instance : DatabasePool
+  - _client : pg.Pool
+  - host : string
+  - port : number
+  - dbname : string
+  + getInstance() : DatabasePool
+  + query(sql: string, params: any[]) : Promise<any[]>
+}
+
+DatabasePool --> DatabasePool : создаёт единственный\nэкземпляр
+@enduml

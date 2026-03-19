@@ -1,0 +1,31 @@
+@startuml Adapter
+skinparam linetype ortho
+skinparam classAttributeIconSize 0
+hide circle
+interface IProductRepository {
+  + getAll() : Promise<array>
+  + getById(id: number) : Promise<object>
+}
+
+class DatabaseProductRepository {
+  - pool : DatabasePool
+  + getAll() : Promise<array>
+  + getById(id: number) : Promise<object>
+}
+
+class ExternalShopAPI {
+  + fetchItems() : Promise<array>
+  + fetchItemDetail(sku: string) : Promise<object>
+}
+
+class ExternalShopAdapter {
+  - externalApi : ExternalShopAPI
+  + getAll() : Promise<array>
+  + getById(id: number) : Promise<object>
+  - convert(item: object) : object
+}
+
+IProductRepository <|.. DatabaseProductRepository
+IProductRepository <|.. ExternalShopAdapter
+ExternalShopAdapter --> ExternalShopAPI : адаптирует
+@enduml

@@ -1,0 +1,29 @@
+@startuml ChainOfResponsibility
+skinparam linetype ortho
+skinparam classAttributeIconSize 0
+hide circle
+abstract class ValidationHandler {
+  # nextHandler : ValidationHandler
+  + setNext(handler: ValidationHandler) : ValidationHandler
+  + {abstract} handle(data: object) : object
+  # fail(message: string) : object
+}
+
+class UsernameLengthValidator {
+  + handle(data: object) : object
+}
+
+class PasswordLengthValidator {
+  + handle(data: object) : object
+}
+
+class UniqueUsernameValidator {
+  - pool : DatabasePool
+  + handle(data: object) : object
+}
+
+ValidationHandler <|-- UsernameLengthValidator
+ValidationHandler <|-- PasswordLengthValidator
+ValidationHandler <|-- UniqueUsernameValidator
+ValidationHandler --> ValidationHandler : nextHandler
+@enduml

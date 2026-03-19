@@ -1,0 +1,33 @@
+@startuml Facade
+skinparam linetype ortho
+skinparam classAttributeIconSize 0
+hide circle
+class APIGateway {
+  - authUrl : string
+  - productsUrl : string
+  + signIn(username, password) : Promise<object>
+  + signUp(username, password) : Promise<object>
+  + verifyToken(token) : Promise<object>
+  + getProducts(category) : Promise<array>
+  - forwardRequest(url, method, body) : Promise<object>
+}
+
+class AuthService {
+  + signIn(username, password) : object
+  + signUp(username, password) : object
+  + verifyToken(token) : boolean
+}
+
+class ProductsService {
+  + getCases() : array
+  + getProcessors() : array
+  + getGraphicsCards() : array
+}
+
+class Client {
+}
+
+Client --> APIGateway : обращается только\nк фасаду
+APIGateway --> AuthService : делегирует
+APIGateway --> ProductsService : делегирует
+@enduml
