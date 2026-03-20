@@ -1,0 +1,43 @@
+@startuml Command
+skinparam linetype ortho
+skinparam classAttributeIconSize 0
+hide circle
+interface ICommand {
+  + execute() : void
+  + undo() : void
+}
+
+class AddToCartCommand {
+  - cart : Cart
+  - product : object
+  + execute() : void
+  + undo() : void
+}
+
+class RemoveFromCartCommand {
+  - cart : Cart
+  - productId : number
+  - removedItem : object
+  + execute() : void
+  + undo() : void
+}
+
+class Cart {
+  - items : object[]
+  + add(product: object) : void
+  + remove(productId: number) : void
+  + getItems() : object[]
+}
+
+class CartCommandHistory {
+  - history : ICommand[]
+  + execute(command: ICommand) : void
+  + undoLast() : void
+}
+
+ICommand <|.. AddToCartCommand
+ICommand <|.. RemoveFromCartCommand
+AddToCartCommand --> Cart
+RemoveFromCartCommand --> Cart
+CartCommandHistory --> ICommand
+@enduml

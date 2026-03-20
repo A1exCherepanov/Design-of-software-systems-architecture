@@ -1,0 +1,28 @@
+@startuml Composite
+skinparam linetype ortho
+skinparam classAttributeIconSize 0
+hide circle
+abstract class CartItem {
+  + name : string
+  + {abstract} getPrice() : number
+  + {abstract} getItems() : array
+}
+
+class SingleProduct {
+  - price : number
+  + getPrice() : number
+  + getItems() : array
+}
+
+class ProductBundle {
+  - children : CartItem[]
+  + add(item: CartItem)
+  + remove(item: CartItem)
+  + getPrice() : number
+  + getItems() : array
+}
+
+CartItem <|-- SingleProduct
+CartItem <|-- ProductBundle
+ProductBundle o--> CartItem : содержит
+@enduml

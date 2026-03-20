@@ -1,0 +1,42 @@
+@startuml Decorator
+skinparam linetype ortho
+skinparam classAttributeIconSize 0
+hide circle
+abstract class ComponentBase {
+  + {abstract} getPrice() : number
+  + {abstract} getDescription() : string
+}
+
+class ConcreteComponent {
+  - name : string
+  - price : number
+  + getPrice() : number
+  + getDescription() : string
+}
+
+abstract class ComponentDecorator {
+  # wrapped : ComponentBase
+  + constructor(component: ComponentBase)
+  + {abstract} getPrice() : number
+  + {abstract} getDescription() : string
+}
+
+class WarrantyDecorator {
+  - warrantyYears : number
+  - warrantyCost : number
+  + getPrice() : number
+  + getDescription() : string
+}
+
+class DiscountDecorator {
+  - discountPercent : number
+  + getPrice() : number
+  + getDescription() : string
+}
+
+ComponentBase <|-- ConcreteComponent
+ComponentBase <|-- ComponentDecorator
+ComponentDecorator <|-- WarrantyDecorator
+ComponentDecorator <|-- DiscountDecorator
+ComponentDecorator o--> ComponentBase : wrapped
+@enduml

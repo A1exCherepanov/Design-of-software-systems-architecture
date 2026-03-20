@@ -1,0 +1,38 @@
+@startuml Builder
+skinparam linetype ortho
+skinparam classAttributeIconSize 0
+hide circle
+class ComputerBuild {
+  + processor : object
+  + motherboard : object
+  + memory : object
+  + graphicsCard : object
+  + storage : object
+  + powerSupply : object
+  + case : object
+  + getTotalPrice() : number
+  + toDict() : object
+}
+
+class ComputerBuildBuilder {
+  - build : ComputerBuild
+  + setProcessor(data: object) : this
+  + setMotherboard(data: object) : this
+  + setMemory(data: object) : this
+  + setGraphicsCard(data: object) : this
+  + setStorage(data: object) : this
+  + setPowerSupply(data: object) : this
+  + setCase(data: object) : this
+  + getResult() : ComputerBuild
+}
+
+class BuildDirector {
+  - builder : ComputerBuildBuilder
+  + setBuilder(b: ComputerBuildBuilder)
+  + makeGamingBuild() : ComputerBuild
+  + makeOfficeBuild() : ComputerBuild
+}
+
+BuildDirector --> ComputerBuildBuilder : использует
+ComputerBuildBuilder --> ComputerBuild : создаёт
+@enduml

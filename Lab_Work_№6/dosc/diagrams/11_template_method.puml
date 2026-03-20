@@ -1,0 +1,31 @@
+@startuml TemplateMethod
+skinparam linetype ortho
+skinparam classAttributeIconSize 0
+hide circle
+abstract class BaseProductController {
+  # pool : DatabasePool
+  + getProducts() : Promise<array>
+  # {abstract} getQuery() : string
+  # {abstract} mapRow(row: array) : object
+  # filterItems(items: array) : array
+}
+
+class ProcessorController {
+  # getQuery() : string
+  # mapRow(row: array) : object
+}
+
+class GraphicsCardController {
+  # getQuery() : string
+  # mapRow(row: array) : object
+}
+
+class MemoryController {
+  # getQuery() : string
+  # mapRow(row: array) : object
+}
+
+BaseProductController <|-- ProcessorController
+BaseProductController <|-- GraphicsCardController
+BaseProductController <|-- MemoryController
+@enduml

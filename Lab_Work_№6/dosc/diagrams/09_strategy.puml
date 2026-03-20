@@ -1,0 +1,32 @@
+@startuml Strategy
+skinparam linetype ortho
+skinparam classAttributeIconSize 0
+hide circle
+interface ISortStrategy {
+  + sort(items: array) : array
+}
+
+class SortByPriceAsc {
+  + sort(items: array) : array
+}
+
+class SortByPriceDesc {
+  + sort(items: array) : array
+}
+
+class SortByName {
+  + sort(items: array) : array
+}
+
+class ProductCatalog {
+  - items : array
+  - sortStrategy : ISortStrategy
+  + setStrategy(strategy: ISortStrategy) : void
+  + getSorted() : array
+}
+
+ISortStrategy <|.. SortByPriceAsc
+ISortStrategy <|.. SortByPriceDesc
+ISortStrategy <|.. SortByName
+ProductCatalog --> ISortStrategy : использует
+@enduml

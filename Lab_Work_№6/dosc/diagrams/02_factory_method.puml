@@ -1,0 +1,44 @@
+@startuml FactoryMethod
+skinparam linetype ortho
+skinparam classAttributeIconSize 0
+hide circle
+abstract class Component {
+  + name : string
+  + price : number
+  + storeName : string
+  + {abstract} getSpecs() : object
+  + toDict() : object
+}
+
+class Processor {
+  + cores : string
+  + socket : string
+  + baseClock : string
+  + getSpecs() : object
+}
+
+class GraphicsCard {
+  + memorySize : string
+  + memoryType : string
+  + gpuClock : string
+  + getSpecs() : object
+}
+
+class Memory {
+  + totalCapacity : string
+  + memoryFrequency : string
+  + memoryType : string
+  + getSpecs() : object
+}
+
+class ComponentFactory {
+  - registry : Map<string, class>
+  + {static} create(category: string, data: object) : Component
+  + {static} register(category: string, cls: class)
+}
+
+Component <|-- Processor
+Component <|-- GraphicsCard
+Component <|-- Memory
+ComponentFactory ..> Component : создаёт
+@enduml
